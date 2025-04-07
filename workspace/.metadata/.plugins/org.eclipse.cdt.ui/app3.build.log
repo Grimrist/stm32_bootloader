@@ -1,0 +1,44 @@
+01:37:59 **** Incremental Build of configuration Binary for project app3 ****
+make -j12 all 
+arm-none-eabi-gcc "../Core/Src/stm32l4xx_it.c" -mcpu=cortex-m4 -std=gnu11 -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -Os -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/stm32l4xx_it.d" -MT"Core/Src/stm32l4xx_it.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/stm32l4xx_it.o"
+../Core/Src/stm32l4xx_it.c: In function 'HAL_UART_RxCpltCallback':
+../Core/Src/stm32l4xx_it.c:219:45: warning: pointer targets in passing argument 2 of 'HAL_UART_Receive_IT' differ in signedness [-Wpointer-sign]
+  219 |         HAL_UART_Receive_IT(&huart2, rx_buff+rx_count, 1);
+      |                                      ~~~~~~~^~~~~~~~~
+      |                                             |
+      |                                             char *
+In file included from ../Core/Inc/stm32l4xx_hal_conf.h:450,
+                 from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/stm32l4xx_it.c:21:
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h:1699:75: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'char *'
+ 1699 | HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
+      |                                                                  ~~~~~~~~~^~~~~
+../Core/Src/stm32l4xx_it.c:222:47: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit_IT' differ in signedness [-Wpointer-sign]
+  222 |                 HAL_UART_Transmit_IT(&huart2, rx_buff, rx_count);
+      |                                               ^~~~~~~
+      |                                               |
+      |                                               char *
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h:1698:82: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+ 1698 | HAL_StatusTypeDef HAL_UART_Transmit_IT(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size);
+      |                                                                   ~~~~~~~~~~~~~~~^~~~~
+arm-none-eabi-gcc -o "app3.elf" @"objects.list"   -mcpu=cortex-m4 -T"/home/moonflax/Coding/stm32_bootloader/workspace/app3/STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="app3.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: app3.elf
+ 
+arm-none-eabi-size  app3.elf 
+arm-none-eabi-objdump -h -S app3.elf  > "app3.list"
+arm-none-eabi-objcopy  -O ihex app3.elf  "app3.hex"
+arm-none-eabi-objcopy  -O binary app3.elf  "app3.bin"
+   text	   data	    bss	    dec	    hex	filename
+   9600	     12	   1812	  11424	   2ca0	app3.elf
+Finished building: default.size.stdout
+ 
+Finished building: app3.bin
+Finished building: app3.hex
+ 
+ 
+Finished building: app3.list
+ 
+
+01:37:59 Build Finished. 0 errors, 2 warnings. (took 180ms)
+

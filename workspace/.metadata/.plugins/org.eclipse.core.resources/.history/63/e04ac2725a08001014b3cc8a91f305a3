@@ -1,0 +1,15 @@
+/*
+ * uart_it.c
+ *
+ *  Created on: Mar 23, 2025
+ *      Author: moonflax
+ */
+char rx_cmd[5] = {};
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  HAL_UART_Receive_IT(&huart1, rx_cmd, 4);
+  if (strcmp(rx_cmd, "SEND") == 0) {
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+  }
+}

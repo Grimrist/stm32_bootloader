@@ -1,0 +1,63 @@
+2025-03-23 12:56:36,982 [INFO] WebApp:194 - Connection lost
+2025-03-23 12:56:45,755 [INFO] WebApp:191 - Connection restablished
+2025-03-23 14:24:59,986 [INFO] WebApp:194 - Connection lost
+2025-03-23 14:25:09,193 [INFO] WebApp:191 - Connection restablished
+2025-03-23 16:45:50,284 [INFO] MainUpdater:3566 - Updater definition file requires update
+2025-03-23 16:45:50,671 [INFO] ServerAccessManage:473 - Download File updaters.zip
+2025-03-23 16:45:50,722 [INFO] FileExtend:242 - Unzip File : updaters.zip
+2025-03-23 16:45:50,723 [INFO] FileExtend:257 - Standard Zip Deflate
+2025-03-23 16:45:50,867 [INFO] ServerAccessManage:473 - Download File PacksControlFlags.xml
+2025-03-23 16:45:50,916 [INFO] ServerAccessManage:473 - Download File cubemx.pidx
+2025-03-23 16:45:51,002 [ERROR] MainUpdater:4108 - Unexpected exception : Index 51 out of bounds for length 0
+2025-03-23 16:45:51,002 [INFO] LoadServerUpdatesThread:375 - End of LoadServerUpdate Thread
+2025-03-23 16:45:51,388 [INFO] CheckServerUpdateThread:120 - End of CheckServer Thread
+2025-03-23 19:08:36,195 [INFO] WebApp:194 - Connection lost
+2025-03-23 19:08:50,949 [INFO] WebApp:191 - Connection restablished
+2025-03-23 19:08:51,799 [INFO] WebApp:194 - Connection lost
+2025-03-23 19:08:51,886 [INFO] WebApp:191 - Connection restablished
+2025-03-23 23:22:41,189 [INFO] WebApp:194 - Connection lost
+2025-03-23 23:22:50,696 [INFO] WebApp:191 - Connection restablished
+2025-03-23 23:54:04,373 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,462x255,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2025-03-23 23:54:05,700 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2025-03-23 23:54:06,051 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2025-03-23 23:54:06,352 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2025-03-23 23:54:08,959 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 431396528 Bytes (639631360)
+2025-03-23 23:54:10,314 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 461278896 Bytes (639631360)
+2025-03-23 23:54:11,811 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 531533488 Bytes (639631360)
+2025-03-23 23:54:12,561 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: SYS
+2025-03-23 23:54:12,561 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: RCC
+2025-03-23 23:54:12,561 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: NVIC
+2025-03-23 23:54:12,561 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: USART
+2025-03-23 23:54:12,562 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: GPIO
+2025-03-23 23:54:12,563 [INFO] CodeGenerator:882 - code generatio: config db path: /opt/stm32cubeide/plugins/com.st.stm32cube.common.mx_6.14.0.202502271554//db/
+2025-03-23 23:54:12,736 [INFO] CodeEngine:263 - oldGeneratedFile, /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/MXTmpFiles/license.tmp_save
+2025-03-23 23:54:12,997 [INFO] CodeEngine:287 - Generated code: /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/MXTmpFiles/license.tmp
+2025-03-23 23:54:13,058 [INFO] CodeEngine:263 - oldGeneratedFile, /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/MXTmpFiles/gpio.tmp_save
+2025-03-23 23:54:13,148 [INFO] CodeEngine:287 - Generated code: /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/MXTmpFiles/gpio.tmp
+2025-03-23 23:54:13,233 [INFO] CodeEngine:263 - oldGeneratedFile, /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Src/stm32l4xx_it.c_save
+2025-03-23 23:54:13,329 [INFO] CodeEngine:287 - Generated code: /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Src/stm32l4xx_it.c
+2025-03-23 23:54:13,330 [INFO] CodeEngine:263 - oldGeneratedFile, /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Inc/stm32l4xx_it.h_save
+2025-03-23 23:54:13,398 [INFO] CodeEngine:287 - Generated code: /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Inc/stm32l4xx_it.h
+2025-03-23 23:54:13,405 [INFO] CodeEngine:263 - oldGeneratedFile, /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Src/stm32l4xx_hal_msp.c_save
+2025-03-23 23:54:13,526 [INFO] CodeEngine:287 - Generated code: /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Src/stm32l4xx_hal_msp.c
+2025-03-23 23:54:13,528 [INFO] CodeEngine:263 - oldGeneratedFile, /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/MXTmpFiles/system.tmp_save
+2025-03-23 23:54:13,585 [INFO] CodeEngine:287 - Generated code: /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/MXTmpFiles/system.tmp
+2025-03-23 23:54:13,588 [INFO] CodeEngine:319 - oldGeneratedFile, /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Inc/stm32l4xx_hal_conf.h_save
+2025-03-23 23:54:13,647 [INFO] CodeEngine:343 - Generated code: /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Inc/stm32l4xx_hal_conf.h
+2025-03-23 23:54:13,689 [INFO] ApiDbMcu:508 - Load IP Config File for USART2
+2025-03-23 23:54:13,692 [INFO] ApiDbMcu:508 - Load IP Config File for RCC
+2025-03-23 23:54:13,697 [INFO] CodeEngine:263 - oldGeneratedFile, /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Inc/main.h_save
+2025-03-23 23:54:13,764 [INFO] CodeEngine:287 - Generated code: /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Inc/main.h
+2025-03-23 23:54:13,767 [INFO] CodeEngine:263 - oldGeneratedFile, /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Src/main.c_save
+2025-03-23 23:54:13,911 [INFO] CodeEngine:287 - Generated code: /home/moonflax/Coding/stm32_bootloader/workspace/stm32_bootloader/Core/Src/main.c
+2025-03-23 23:54:14,086 [INFO] ProjectBuilder:3324 - Time for Copy HAL[1] : 41mS.
+2025-03-23 23:54:14,089 [INFO] ProjectBuilder:4912 - Project Generator version: 4.6.0-B36
+2025-03-23 23:54:14,153 [INFO] ConfigFileManager:1590 - The Die is : DIE415
+2025-03-23 23:54:14,158 [INFO] ApiDbMcu:508 - Load IP Config File for FATFS
+2025-03-23 23:54:14,161 [INFO] ApiDbMcu:508 - Load IP Config File for FREERTOS
+2025-03-23 23:54:14,168 [INFO] ApiDbMcu:508 - Load IP Config File for TOUCHSENSING
+2025-03-23 23:54:14,172 [INFO] ApiDbMcu:508 - Load IP Config File for USB_DEVICE
+2025-03-23 23:54:14,175 [INFO] ApiDbMcu:508 - Load IP Config File for USB_HOST
+2025-03-23 23:54:14,996 [INFO] ProjectBuilder:5191 - Time for Generating toolchain IDE Files: 906mS.
+2025-03-23 23:54:14,998 [INFO] ProjectBuilder:3181 - Time for Copy CMSIS : 1mS.
+2025-03-23 23:54:14,999 [INFO] ProjectBuilder:3181 - Time for Copy CMSIS : 0mS.
