@@ -41,13 +41,16 @@ _estack = ORIGIN(RAM) + LENGTH(RAM); /* end of "RAM" Ram type memory */
 
 _Min_Heap_Size = 0x200; /* required amount of heap */
 _Min_Stack_Size = 0x400; /* required amount of stack */
+_page_size = 2K;
+_origin_page = 40;
+_offset = (_origin_page * _page_size);
 
 /* Memories definition */
 MEMORY
 {
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 96K
   RAM2    (xrw)    : ORIGIN = 0x10000000,   LENGTH = 32K
-  FLASH    (rx)    : ORIGIN = 0x8005000,   LENGTH = 1004K
+  FLASH    (rx)    : ORIGIN = 0x8000000 + _offset, LENGTH = 512K - _offset
 }
 
 /* Sections */

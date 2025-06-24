@@ -1,0 +1,3 @@
+../Core/Src/nvs.c:12:13:validate_app	2
+../Core/Src/nvs.c:20:13:validate_crc32	1
+../Core/Src/nvs.c:27:13:update_app_metadata	3

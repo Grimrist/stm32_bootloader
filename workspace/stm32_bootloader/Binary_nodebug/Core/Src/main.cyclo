@@ -1,0 +1,7 @@
+../Core/Src/main.c:97:5:bl_erase	3
+../Core/Src/main.c:126:5:bl_write	6
+../Core/Src/main.c:169:5:bl_go	3
+../Core/Src/main.c:211:5:bl_update	1
+../Core/Src/main.c:400:6:SystemClock_Config	4
+../Core/Src/main.c:225:5:main	28
+../Core/Src/main.c:453:6:Error_Handler	1

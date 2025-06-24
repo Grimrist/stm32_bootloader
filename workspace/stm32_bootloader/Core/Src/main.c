@@ -18,11 +18,19 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "crc.h"
+#include "usart.h"
+#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include <stdlib.h>
+#include "esp_at.h"
+#include "bl.h"
+#include <stdio.h>
+#include <errno.h>
+#include "nvs.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -32,29 +40,25 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
-#define FLASH_USER_START_PAGE 128
-#define FLASH_USER_END_PAGE 255
-#define FLASH_USER_START_ADDR 0x08000000 + (2048 * FLASH_USER_START_PAGE)
-#define FLASH_USER_END_ADDR 0x08000000 + (2048 * FLASH_USER_END_PAGE)
-#define RESET_HANDLER FLASH_USER_START_ADDR + 4
-#define USER_APP_VTAB ((const struct app_vectable_ *) FLASH_USER_START_ADDR)
+#define UPDATE_URL "http://192.168.100.88:8000/latest"
 
 #define WRITE_CMD 0x31
 #define ERASE_CMD 0x43
 #define GO_CMD 0x20
+#define UPDATE_CMD 0x99
 #define ACK_CMD 0x79
 #define NACK_CMD 0x1F
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define min(a,b) \
+	({ __typeof__ (a) _a = (a); \
+	   __typeof__ (b) _b = (b); \
+	   _a < _b ? _a : _b; })
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 static FLASH_EraseInitTypeDef EraseInitStruct;
@@ -64,12 +68,6 @@ struct app_vectable_ {
 	uint32_t Initial_SP;
 	void (*Reset_Handler)(void);
 };
-enum recv_states {
-	IDLE,
-	ERASE,
-	WRITE,
-	GO
-} state = IDLE;
 
 uint32_t write_addr;
 uint32_t write_filesize;
@@ -79,21 +77,145 @@ uint8_t ack_cmd = ACK_CMD;
 uint8_t nack_cmd = NACK_CMD;
 uint8_t* ACK = &ack_cmd;
 uint8_t* NACK = &nack_cmd;
-extern const uint32_t _estack;
+__IO uint32_t uwCRCValue = 0;
+uint32_t crc_recv = 0;
+
+extern uint64_t _bdata;
+char resp_buff[512] = {0};
+char* resp_tokens[20] = {0};
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int bl_erase() {
+	uint32_t page_count;
+	uint32_t initial_page;
+	HAL_UART_Receive(&huart2, &page_count, 4, -1);
+	HAL_UART_Receive(&huart2, &initial_page, 4, -1);
+	/* Unlock the Flash to enable the flash control register access */
+	if (HAL_FLASH_Unlock() != HAL_OK) {
+		return -1;
+	}
 
+	/* TODO: Add NACK for invalid page count or initial page */
+	if(initial_page > 255) {
+		EraseInitStruct.Banks = FLASH_BANK_2;
+	} else
+		EraseInitStruct.Banks = FLASH_BANK_1;
+
+	/* Fill EraseInit structure*/
+	EraseInitStruct.TypeErase 	= FLASH_TYPEERASE_PAGES;
+	EraseInitStruct.Page 		= initial_page;
+	EraseInitStruct.NbPages 	= page_count;
+
+	if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK) {
+	    HAL_FLASH_Lock();
+		return -1;
+	}
+	HAL_FLASH_Lock();
+	return 0;
+}
+
+int bl_write() {
+	HAL_UART_Receive(&huart2, &write_addr, 4, -1);
+	// TODO: Check for valid address
+	HAL_UART_Transmit(&huart2, ACK, 1, -1);
+	uint32_t file_size = 0;
+	HAL_UART_Receive(&huart2, &file_size, sizeof(file_size), -1);
+	// Receive checksum
+	HAL_UART_Receive(&huart2, &crc_recv, sizeof(crc_recv), -1);
+
+	if(file_size > sizeof(bin_file)) {
+		return -1;
+	}
+	HAL_UART_Receive(&huart2, bin_file, file_size, -1);
+
+	// Calculate checksum
+	uwCRCValue = HAL_CRC_Calculate(&hcrc, (uint32_t *) bin_file, file_size);
+	uwCRCValue = ~uwCRCValue;
+
+	if (uwCRCValue != crc_recv) {
+		return -1;
+	}
+
+	uint64_t* file_ptr = bin_file;
+	uint32_t user_addr = write_addr;
+	/* Unlock the Flash to enable the flash control register access */
+	if (HAL_FLASH_Unlock() != HAL_OK) {
+		return -1;
+	}
+
+	for(int i = 0; i < (file_size / 8); i++) {
+		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, user_addr, *file_ptr) == HAL_ERROR) {
+			uint32_t err = HAL_FLASH_GetError();
+			HAL_FLASH_Lock();
+			return -1;
+		}
+		user_addr += 8;
+		file_ptr += 1;
+	}
+	HAL_FLASH_Lock();
+	HAL_UART_Transmit(&huart2, ACK, 1, -1);
+	return 0;
+}
+
+int bl_go() {
+	HAL_UART_Receive(&huart2, &go_addr, 4, -1);
+	uint8_t bank_swp = 0;
+	uint32_t vtor_addr = go_addr;
+	// TODO: Check for valid address
+	if (go_addr >= 0x08080000) {
+		bank_swp = 1;
+		go_addr -= 0x00080000;
+	}
+	HAL_UART_Transmit(&huart2, ACK, 1, -1);
+	/* Begin preparing for application jump */
+	HAL_RCC_DeInit();
+	HAL_DeInit();
+	__disable_irq();
+	SysTick->CTRL = 0;
+	SysTick->LOAD = 0;
+	SysTick->VAL = 0;
+	if(bank_swp == 1) {
+		// disable ART
+		CLEAR_BIT(FLASH->ACR, FLASH_ACR_PRFTEN);
+		CLEAR_BIT(FLASH->ACR, FLASH_ACR_ICEN | FLASH_ACR_DCEN);
+		// clear cache
+		SET_BIT(FLASH->ACR, FLASH_ACR_ICRST | FLASH_ACR_DCRST);
+		SET_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
+
+		SET_BIT(FLASH->ACR, FLASH_ACR_PRFTEN);
+		SET_BIT(FLASH->ACR, FLASH_ACR_ICEN | FLASH_ACR_DCEN);
+	}
+	SCB->VTOR = vtor_addr;
+	//__set_MSP(_estack); // Verify whether this is actually necessary
+	__DSB();
+	__ISB();
+	__enable_irq();
+	uint32_t Reset_Handler_addr = go_addr + 4;
+	void (*Reset_Handler)(void) = *((uint32_t*) Reset_Handler_addr);
+	Reset_Handler();
+	/* This should never execute */
+	while(1) {
+		// TODO: Add warning that execution failed
+	}
+}
+
+int bl_update() {
+	bl_erase();
+	bl_write();
+	/* Write which bank is being used to flash */
+	if (_bdata == 1)
+	bl_go();
+	return -1;
+}
 /* USER CODE END 0 */
 
 /**
@@ -126,8 +248,114 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  /* USER CODE BEGIN 2 */
+  MX_CRC_Init();
+  MX_USART1_UART_Init();
 
+  /* USER CODE BEGIN 2 */
+  {
+  /* Initialize boot info structs */
+  struct App_Data app1 = *((struct App_Data*) (&_nvs_start));
+  struct App_Data app2 = *((struct App_Data*) (&_nvs_start + sizeof(struct App_Data)));
+
+  /* Enable WiFi on slave */
+  char* args[] = {"1", "0"};
+  struct AT_Command enable_wifi = {
+	  .cmd = "CWMODE",
+	  .args = args,
+	  .arg_count = 2
+  };
+  if(at_exchange(&huart1, enable_wifi, resp_buff, sizeof(resp_buff), resp_tokens, sizeof(resp_tokens)) != AT_OK) {
+	  _bl_boot();
+	  goto at_end;
+  }
+  struct AP_Settings settings = {
+    .ssid = "hotspot-m5",
+	.pwd = "guak4768"
+  };
+  if(at_connect_wifi(&huart1, settings) != 0) {
+	  _bl_boot();
+	  goto at_end;
+  }
+  char url_target[] = UPDATE_URL;
+  if(at_head(&huart1, url_target, bin_file, sizeof(bin_file), resp_tokens, sizeof(resp_tokens)) != AT_OK) {
+	  _bl_boot();
+	  goto at_end;
+  }
+  uint32_t crc32 = 0;
+  uint8_t force_upd = 0;
+  char* crc32_str;
+  char* force_upd_str;
+  for (int i = 0; i < sizeof(resp_tokens)/sizeof(resp_tokens[0]); i++) {
+	  if(crc32_str = strstr(resp_tokens[i], "x-crc32")) {
+		  errno = 0;
+		  crc32 = strtoll(crc32_str+8, NULL, 10);
+	  }
+	  if(force_upd_str = strstr(resp_tokens[i], "x-forceupd")) {
+		  errno = 0;
+		  force_upd = strtoll(force_upd_str+11, NULL, 10);
+	  }
+  }
+  if(!crc32) {
+	  _bl_boot();
+	  goto at_end;
+  }
+  if (force_upd != 1) {
+	  if(app1.crc32 == crc32 || app2.crc32 == crc32) {
+		  _bl_boot();
+		  goto at_end;
+	  }
+  }
+  size_t file_size = at_get_file_size(&huart1, url_target, bin_file, sizeof(bin_file));
+  // TODO: Make HEAD call to check for Accept-Ranges
+  int page_count = (file_size + 2048 - 1) / 2048;
+  int target_page = -1;
+  if(app1.status != BL_VALID)
+	  target_page = 40;
+  else if(app2.status != BL_VALID)
+	  target_page = 40 + 256;
+  if (_bl_erase(page_count, target_page) == -1)
+	  while(1);
+  	  // TODO: Handle erase failure
+  size_t file_loaded = 0;
+  size_t next_file_loaded = 0;
+  while (file_size > file_loaded) {
+	  memset(bin_file, 0, sizeof(bin_file));
+	  next_file_loaded = min(file_size,file_loaded + 1024);
+	  size_t range[2] = {file_loaded, next_file_loaded-1};
+	  at_get_file(&huart1, url_target, bin_file, sizeof(bin_file), range);
+	  _bl_write(bin_file, next_file_loaded - file_loaded, 0x08000000 + (2048 * target_page) + file_loaded);
+	  file_loaded = next_file_loaded;
+  }
+
+  if(app1.status != BL_VALID) {
+	  app1.magic = MAGIC;
+	  app1.address = 0x08000000 + (2048 * target_page);
+	  app1.crc32 = crc32;
+	  app1.length = file_size;
+	  if(validate_app(&app1) == BL_ERROR || validate_crc32(&app1) == BL_ERROR)
+		  app1.status = BL_INVALID;
+	  else {
+		  app1.status = BL_VALID;
+		  app2.status = BL_INVALID;
+	  }
+  }
+  else if(app2.status != BL_VALID) {
+	  app2.magic = MAGIC;
+	  app2.address = 0x08000000 + (2048 * target_page);
+	  app2.crc32 = crc32;
+	  app2.length = file_size;
+	  if(validate_app(&app2) == BL_ERROR || validate_crc32(&app2) == BL_ERROR)
+		  app2.status = BL_INVALID;
+	  else {
+		  app2.status = BL_VALID;
+		  app1.status = BL_INVALID;
+	  }
+  }
+  if(update_app_metadata(&app1, &app2) == BL_OK)
+	  _bl_boot();
+  at_end:
+  	  __NOP();
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -137,117 +365,39 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	switch (state) {
-		case IDLE:
-			HAL_UART_Receive(&huart2, rx_cmd, 2, -1);
-			if((rx_cmd[0] ^ rx_cmd[1]) != 255) {
-				HAL_UART_Transmit(&huart2, NACK, 1, -1);
-				break;
-			}
-			if(rx_cmd[0] == WRITE_CMD) {
-				state = WRITE;
-				HAL_UART_Transmit(&huart2, ACK, 1, -1);
-				break;
-			}
-			if(rx_cmd[0] == ERASE_CMD) {
-				state = ERASE;
-				HAL_UART_Transmit(&huart2, ACK, 1, -1);
-				break;
-			}
-			if(rx_cmd[0] == GO_CMD) {
-				state = GO;
-				HAL_UART_Transmit(&huart2, ACK, 1, -1);
-				break;
-			}
-			HAL_UART_Transmit(&huart2, NACK, 1, -1);
-			break;
-
-		case ERASE:
-			uint32_t page_count;
-			uint32_t initial_page;
-			HAL_UART_Receive(&huart2, &page_count, 4, -1);
-			HAL_UART_Receive(&huart2, &initial_page, 4, -1);
-			/* Unlock the Flash to enable the flash control register access */
-			if (HAL_FLASH_Unlock() != HAL_OK) {
-				HAL_UART_Transmit(&huart2, NACK, 1, -1);
-				break;
-			}
-			/* Fill EraseInit structure*/
-			EraseInitStruct.TypeErase 	= FLASH_TYPEERASE_PAGES;
-			EraseInitStruct.Banks     	= FLASH_BANK_1;
-			EraseInitStruct.Page 		= initial_page;
-			EraseInitStruct.NbPages 	= page_count;
-
-			if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK) {
-				HAL_UART_Transmit(&huart2, NACK, 1, -1);
-			    HAL_FLASH_Lock();
-				break;
-			}
-			HAL_FLASH_Lock();
-			HAL_UART_Transmit(&huart2, ACK, 1, -1);
-			state = IDLE;
-			break;
-
-		case WRITE:
-			HAL_UART_Receive(&huart2, &write_addr, 4, -1);
-			// TODO: Check for valid address
-			HAL_UART_Transmit(&huart2, ACK, 1, -1);
-			uint32_t file_size = 0;
-			HAL_UART_Receive(&huart2, &file_size, 4, -1);
-			// TODO: Receive checksum
-			if(file_size > sizeof(bin_file)) {
-				HAL_UART_Transmit(&huart2, NACK, 1, -1);
-				state = IDLE;
-				break;
-			}
-			HAL_UART_Receive(&huart2, bin_file, file_size, -1);
-			uint64_t* file_ptr = bin_file;
-			uint32_t user_addr = write_addr;
-			/* Unlock the Flash to enable the flash control register access */
-			if (HAL_FLASH_Unlock() != HAL_OK) {
-				HAL_UART_Transmit(&huart2, NACK, 1, -1);
-				break;
-			}
-			for(int i = 0; i < (file_size / 8); i++) {
-				if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, user_addr, *file_ptr) == HAL_ERROR) {
-					HAL_UART_Transmit(&huart2, NACK, 1, -1);
-					uint32_t err = HAL_FLASH_GetError();
-					HAL_FLASH_Lock();
-					state = IDLE;
-					break;
-				}
-				user_addr += 8;
-				file_ptr += 1;
-			}
-			HAL_UART_Transmit(&huart2, ACK, 1, -1);
-			HAL_FLASH_Lock();
-			state = IDLE;
-			break;
-
-		case GO:
-			HAL_UART_Receive(&huart2, &go_addr, 4, -1);
-			// TODO: Check for valid address
-			HAL_UART_Transmit(&huart2, ACK, 1, -1);
-			/* Begin preparing for application jump */
-			HAL_RCC_DeInit();
-			HAL_DeInit();
-			__disable_irq();
-			SysTick->CTRL = 0;
-			SysTick->LOAD = 0;
-			SysTick->VAL = 0;
-			SCB->VTOR = go_addr;
-			//__set_MSP(_estack); // Verify whether this is actually necessary
-			__DSB();
-			__ISB();
-			__enable_irq();
-			uint32_t Reset_Handler_addr = go_addr + 4;
-			void (*Reset_Handler)(void) = *((uint32_t*) Reset_Handler_addr);
-			Reset_Handler();
-			/* This should never execute */
-			while(1) {
-				// TODO: Add warning that execution failed?
-			}
+	HAL_UART_Receive(&huart2, rx_cmd, 2, -1);
+	if((rx_cmd[0] ^ rx_cmd[1]) != 255) {
+		HAL_UART_Transmit(&huart2, NACK, 1, -1);
 	}
+	if(rx_cmd[0] == WRITE_CMD) {
+		HAL_UART_Transmit(&huart2, ACK, 1, -1);
+		if (bl_write() == 0) {
+			HAL_UART_Transmit(&huart2, ACK, 1, -1);
+			continue;
+		}
+	}
+	else if(rx_cmd[0] == ERASE_CMD) {
+		HAL_UART_Transmit(&huart2, ACK, 1, -1);
+		if (bl_erase() == 0) {
+			HAL_UART_Transmit(&huart2, ACK, 1, -1);
+			continue;
+		}
+	}
+	else if(rx_cmd[0] == GO_CMD) {
+		HAL_UART_Transmit(&huart2, ACK, 1, -1);
+		if (bl_go() == 0) {
+			HAL_UART_Transmit(&huart2, ACK, 1, -1);
+			continue;
+		}
+	}
+	else if(rx_cmd[0] == UPDATE_CMD) {
+		HAL_UART_Transmit(&huart2, ACK, 1, -1);
+		if (bl_update() == 0) {
+			HAL_UART_Transmit(&huart2, ACK, 1, -1);
+			continue;
+		}
+	}
+	HAL_UART_Transmit(&huart2, NACK, 1, -1);
   }
   /* USER CODE END 3 */
 }
@@ -299,80 +449,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART2_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART2_Init 0 */
-
-  /* USER CODE END USART2_Init 0 */
-
-  /* USER CODE BEGIN USART2_Init 1 */
-
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART2_Init 2 */
-
-  /* USER CODE END USART2_Init 2 */
-
-}
-
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  /* USER CODE BEGIN MX_GPIO_Init_1 */
-
-  /* USER CODE END MX_GPIO_Init_1 */
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
-
-  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */

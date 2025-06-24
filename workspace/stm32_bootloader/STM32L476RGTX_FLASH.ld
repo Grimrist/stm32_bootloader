@@ -47,8 +47,10 @@ MEMORY
 {
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 96K
   RAM2    (xrw)    : ORIGIN = 0x10000000,   LENGTH = 32K
-  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 1024K
+  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 512K
 }
+
+_flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 
 /* Sections */
 SECTIONS
@@ -73,9 +75,13 @@ SECTIONS
 
     KEEP (*(.init))
     KEEP (*(.fini))
-
+    
     . = ALIGN(4);
-    _etext = .;        /* define a global symbols at end of code */
+	_bdata = .;
+	. += ALIGN(8);
+	
+    . = ALIGN(4);
+    _etext = .;        /* define a global symbol at end of code */
   } >FLASH
 
   /* Constant data into "FLASH" Rom type memory */
@@ -186,4 +192,26 @@ SECTIONS
   }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
+  
+  /* Block to store metadata about applications */
+  ._nvs : 
+  {
+  	KEEP(*(._nvs));
+  	/* Get start of nvs page */
+  	. = ALIGN(2K);
+  	_nvs_start = .;
+  	  	
+  	/* Get end of NVS page */
+  	. += 2K;
+  	_nvs_end = .; 
+  	
+  } >FLASH
+  
+  /* Global end of binary */
+  ._end :
+  {
+  	KEEP(*(._end));
+  	. = ALIGN(4);
+  	_binary_end = .;
+  } >FLASH
 }
