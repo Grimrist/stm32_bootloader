@@ -1,3 +1,4 @@
+"./Core/Client/bl_ota_helper.o"
 "./Core/Src/bl.o"
 "./Core/Src/crc.o"
 "./Core/Src/esp_at.o"

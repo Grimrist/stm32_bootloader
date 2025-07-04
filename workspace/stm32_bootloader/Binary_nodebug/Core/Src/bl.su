@@ -1,4 +1,4 @@
-../Core/Src/bl.c:64:55:_bl_go	16	static,ignoring_inline_asm
-../Core/Src/bl.c:17:5:_bl_write	16	static
-../Core/Src/bl.c:38:5:_bl_erase	32	static
-../Core/Src/bl.c:104:6:_bl_boot	8	static
+../Core/Src/bl.c:68:55:_bl_go	16	static,ignoring_inline_asm
+../Core/Src/bl.c:18:5:_bl_write	16	static
+../Core/Src/bl.c:42:5:_bl_erase	32	static
+../Core/Src/bl.c:108:6:_bl_boot	8	static

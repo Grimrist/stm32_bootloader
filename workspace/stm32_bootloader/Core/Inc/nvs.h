@@ -13,5 +13,6 @@
 bl_status_t validate_app(struct App_Data* app);
 bl_status_t validate_crc32(struct App_Data* app);
 bl_status_t update_app_metadata(struct App_Data* app1, struct App_Data* app2);
+void bl_ota_move_status_to_ram(struct App_Data* app);
 
 #endif /* INC_NVS_H_ */

@@ -34,3 +34,9 @@ bl_status_t update_app_metadata(struct App_Data* app1, struct App_Data* app2) {
 		return BL_ERROR;
 	return BL_OK;
 }
+
+void bl_ota_move_status_to_ram(struct App_Data* app) {
+	struct App_Status_Data* app_status = RAM_PERSIST_ADDR;
+	app_status->magic = MAGIC;
+	app_status->status = app->status;
+}

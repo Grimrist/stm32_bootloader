@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include "usart.h"
 #include "bl.h"
+#include "nvs.h"
 
 static uint32_t PageError;
 
@@ -107,11 +108,13 @@ __attribute__ ((long_call, section(".RamFunc"))) void _bl_go(uint32_t go_addr) {
 void _bl_boot() {
   struct App_Data* app1 = &_nvs_start;
   struct App_Data* app2 = &_nvs_start + sizeof(struct App_Data);
-  if (app2->status == BL_VALID) {
-	  _bl_go(app2->address);
-  }
-  else if (app1->status == BL_VALID) {
+  if (app1->status != BL_INVALID || app1->status != BL_ABORTED) {
+	  bl_ota_move_status_to_ram(app1);
 	  _bl_go(app1->address);
+  }
+  else if (app2->status != BL_INVALID || app2->status != BL_ABORTED) {
+	  bl_ota_move_status_to_ram(app2);
+	  _bl_go(app2->address);
   }
   else return;
 }

@@ -13,7 +13,9 @@
 
 #define GET_FLASH_PAGE(a) ((a - 0x08000000) / 2048)
 
+#define UPDATE_URL "http://192.168.100.88:8000/latest"
 #define MAGIC 0xB007704D
+#define RAM_PERSIST_ADDR 0x10000000
 
 extern const volatile void _nvs_start;
 extern const volatile void _nvs_end;
@@ -30,10 +32,16 @@ typedef enum {
 } bl_app_status_t;
 
 struct App_Data {
-	uint64_t magic;
+	uint64_t magic; // Force 64bit alignment on struct
 	uint32_t crc32;
 	uint32_t address;
 	uint32_t length;
+	uint8_t status;
+};
+
+// For app validation via RAM
+struct App_Status_Data {
+	uint32_t magic;
 	uint8_t status;
 };
 

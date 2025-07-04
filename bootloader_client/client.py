@@ -45,7 +45,7 @@ send_command(ser, 'ERASE')
 page_count = math.ceil(file_size / 2048)
 ser.write(page_count.to_bytes(length=4, byteorder='little'))
 print("Sent page count %d" % page_count)
-initial_page = 10 + page_offset
+initial_page = 40 + page_offset
 ser.write(initial_page.to_bytes(length=4, byteorder='little'))
 print("Sent initial page %d" % initial_page)
 resp = ser.read(1)

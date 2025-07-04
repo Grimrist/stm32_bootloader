@@ -40,7 +40,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define UPDATE_URL "http://192.168.100.88:8000/latest"
 
 #define WRITE_CMD 0x31
 #define ERASE_CMD 0x43
@@ -351,8 +350,9 @@ int main(void)
 		  app1.status = BL_INVALID;
 	  }
   }
-  if(update_app_metadata(&app1, &app2) == BL_OK)
+  if(update_app_metadata(&app1, &app2) == BL_OK) {
 	  _bl_boot();
+  }
   at_end:
   	  __NOP();
   }

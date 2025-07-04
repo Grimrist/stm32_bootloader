@@ -1,0 +1,4 @@
+../Core/Client/bl_ota_helper.c:11:6:bl_ota_mark_valid	0	static
+../Core/Client/bl_ota_helper.c:17:6:bl_ota_mark_invalid	0	static
+../Core/Client/bl_ota_helper.c:23:6:bl_ota_mark_aborted	0	static
+../Core/Client/bl_ota_helper.c:29:17:bl_ota_check_status	0	static
