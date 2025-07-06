@@ -1,4 +1,4 @@
 ../Core/Src/nvs.c:12:13:validate_app	0	static
 ../Core/Src/nvs.c:20:13:validate_crc32	8	static
-../Core/Src/nvs.c:27:13:update_app_metadata	16	static
-../Core/Src/nvs.c:38:6:bl_ota_move_status_to_ram	0	static
+../Core/Src/nvs.c:29:13:update_app_metadata	16	static
+../Core/Src/nvs.c:40:6:bl_ota_move_status_to_ram	0	static

@@ -1,4 +1,4 @@
-../Core/Src/bl.c:68:55:_bl_go	3
+../Core/Src/bl.c:69:55:_bl_go	3
 ../Core/Src/bl.c:18:5:_bl_write	5
-../Core/Src/bl.c:42:5:_bl_erase	3
-../Core/Src/bl.c:108:6:_bl_boot	0
+../Core/Src/bl.c:43:5:_bl_erase	3
+../Core/Src/bl.c:109:6:_bl_boot	0

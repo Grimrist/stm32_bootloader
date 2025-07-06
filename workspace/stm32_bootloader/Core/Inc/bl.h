@@ -13,7 +13,12 @@
 
 #define GET_FLASH_PAGE(a) ((a - 0x08000000) / 2048)
 
-#define UPDATE_URL "http://192.168.100.88:8000/latest"
+//#define SKIP_CHKSUM
+
+#define UPDATE_URL "http://192.168.100.170:8000/latest"
+#define WIFI_AP "hotspot-m5"
+#define WIFI_PWD "guak4768"
+
 #define MAGIC 0xB007704D
 #define RAM_PERSIST_ADDR 0x10000000
 

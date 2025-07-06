@@ -26,7 +26,8 @@ int _bl_write(char* bin_file, size_t bin_len, uint32_t write_addr) {
 	for(int i = 0; i < remainder; i++) {
 		bin_file[bin_len + i] = '\0';
 	}
-	for(int i = 0; i < ((bin_len + 7) / 8); i++) {
+	bin_len += remainder;
+	for(int i = 0; i < (bin_len / 8); i++) {
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, user_addr, *file_ptr) == HAL_ERROR) {
 			uint32_t err = HAL_FLASH_GetError();
 			HAL_FLASH_Lock();

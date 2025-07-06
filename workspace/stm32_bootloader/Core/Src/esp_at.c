@@ -163,10 +163,11 @@ AT_Status at_get_file(UART_HandleTypeDef* huart, char* url, char* buf, size_t bu
 		.arg_count = arg_count
 	};
 	char* token_arr[6] = {0};
-	if (at_exchange(huart, http_get, buf, buf_size, token_arr, 2) != AT_OK)
+	if (at_exchange(huart, http_get, buf, buf_size, token_arr, 1) != AT_OK)
 		return AT_ERROR;
-	strtok(token_arr[1], ",");
-	char* data_ptr = token_arr[1] + strlen(token_arr[1]) + 1;
+	char* temp = token_arr[0] + strlen(token_arr[0]) + 1;
+	strtok(temp, ",");
+	char* data_ptr = temp + strlen(temp) + 1;
 	// We move the entire file to the start of bin_file to ensure double-word alignment
 	memmove(buf, data_ptr, (range[1] - range[0] + 1));
 	return AT_OK;

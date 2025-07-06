@@ -63,14 +63,10 @@
 static FLASH_EraseInitTypeDef EraseInitStruct;
 static uint32_t PageError;
 char rx_cmd[2] = {0,0};
-struct app_vectable_ {
-	uint32_t Initial_SP;
-	void (*Reset_Handler)(void);
-};
 
 uint32_t write_addr;
 uint32_t write_filesize;
-char bin_file[32768/2]; // Allocated pre-emptively
+volatile char bin_file[32768/2];
 uint32_t go_addr;
 uint8_t ack_cmd = ACK_CMD;
 uint8_t nack_cmd = NACK_CMD;
@@ -268,8 +264,8 @@ int main(void)
 	  goto at_end;
   }
   struct AP_Settings settings = {
-    .ssid = "hotspot-m5",
-	.pwd = "guak4768"
+    .ssid = WIFI_AP,
+	.pwd = WIFI_PWD
   };
   if(at_connect_wifi(&huart1, settings) != 0) {
 	  _bl_boot();
