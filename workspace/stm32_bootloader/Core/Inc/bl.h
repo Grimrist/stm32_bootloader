@@ -13,9 +13,14 @@
 
 #define GET_FLASH_PAGE(a) ((a - 0x08000000) / 2048)
 
+/* Disable CRC32 checksum */
 //#define SKIP_CHKSUM
 
-#define UPDATE_URL "http://192.168.100.170:8000/latest"
+/* Disable app rollback */
+#define DISABLE_ROLLBACK
+
+
+#define UPDATE_URL "http://192.168.90.106:8000/latest"
 #define WIFI_AP "hotspot-m5"
 #define WIFI_PWD "guak4768"
 
@@ -27,6 +32,8 @@ extern const volatile void _nvs_end;
 
 extern const volatile void _binary_end;
 extern const volatile void _flash_end;
+
+extern const volatile void _estack;
 
 /* Metadata structures for bootloader */
 typedef enum {

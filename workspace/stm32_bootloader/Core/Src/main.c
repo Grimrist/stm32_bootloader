@@ -252,6 +252,24 @@ int main(void)
   struct App_Data app1 = *((struct App_Data*) (&_nvs_start));
   struct App_Data app2 = *((struct App_Data*) (&_nvs_start + sizeof(struct App_Data)));
 
+  #ifndef DISABLE_ROLLBACK
+  /* Check if there is application to validate post-boot */
+  bl_ota_cancel_rollback(&app1, &app2);
+  #endif
+//  /* Check for WiFi connection */
+//  struct AT_Command check_wifi = {
+//	  .cmd = "CWJAP?",
+//	  .args = 0,
+//	  .arg_count = 0
+//  };
+//
+//  if(at_exchange(&huart1, check_wifi, resp_buff, sizeof(resp_buff), resp_tokens, sizeof(resp_tokens)) != AT_OK) {
+//	  _bl_boot();
+//	  goto at_end;
+//  }
+  /* Clear out UART buffers from any incoming data */
+  HAL_UART_Receive(&huart1, resp_buff, sizeof(resp_buff), 1000);
+
   /* Enable WiFi on slave */
   char* args[] = {"1", "0"};
   struct AT_Command enable_wifi = {
@@ -330,7 +348,11 @@ int main(void)
 	  if(validate_app(&app1) == BL_ERROR || validate_crc32(&app1) == BL_ERROR)
 		  app1.status = BL_INVALID;
 	  else {
+		#ifdef DISABLE_ROLLBACK
 		  app1.status = BL_VALID;
+		#else
+		  app1.status = BL_PENDING;
+		#endif
 		  app2.status = BL_INVALID;
 	  }
   }
@@ -342,7 +364,11 @@ int main(void)
 	  if(validate_app(&app2) == BL_ERROR || validate_crc32(&app2) == BL_ERROR)
 		  app2.status = BL_INVALID;
 	  else {
+		#ifdef DISABLE_ROLLBACK
 		  app2.status = BL_VALID;
+		#else
+		  app2.status = BL_PENDING;
+		#endif
 		  app1.status = BL_INVALID;
 	  }
   }

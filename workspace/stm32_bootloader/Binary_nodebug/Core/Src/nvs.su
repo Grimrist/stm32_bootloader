@@ -2,3 +2,5 @@
 ../Core/Src/nvs.c:20:13:validate_crc32	8	static
 ../Core/Src/nvs.c:29:13:update_app_metadata	16	static
 ../Core/Src/nvs.c:40:6:bl_ota_move_status_to_ram	0	static
+../Core/Src/nvs.c:46:6:bl_ota_cancel_rollback	8	static
+../Core/Src/nvs.c:58:6:_clear_persist_ram	0	static

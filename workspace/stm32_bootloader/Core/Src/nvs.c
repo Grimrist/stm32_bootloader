@@ -38,7 +38,23 @@ bl_status_t update_app_metadata(struct App_Data* app1, struct App_Data* app2) {
 }
 
 void bl_ota_move_status_to_ram(struct App_Data* app) {
-	struct App_Status_Data* app_status = RAM_PERSIST_ADDR;
+	struct App_Status_Data* app_status = (struct App_Status_Data*) RAM_PERSIST_ADDR;
 	app_status->magic = MAGIC;
 	app_status->status = app->status;
+}
+
+void bl_ota_cancel_rollback(struct App_Data* app1, struct App_Data* app2) {
+	struct App_Status_Data* app_status = (struct App_Status_Data*) RAM_PERSIST_ADDR;
+	if (app_status->magic != MAGIC)
+		return;
+	if(app1->status == BL_PENDING) {
+		app1->status = app_status->status;
+	}
+	else if(app2->status == BL_PENDING) {
+		app2->status = app_status->status;
+	}
+}
+
+void _clear_persist_ram() {
+
 }

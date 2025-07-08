@@ -65,7 +65,12 @@ AT_Status at_recv(UART_HandleTypeDef* huart, char* resp_buf, size_t buf_size, ch
 
 HAL_StatusTypeDef at_send(UART_HandleTypeDef* huart, struct AT_Command at_cmd) {
 	memset(msg_buf, 0, sizeof(msg_buf));
-	sprintf(msg_buf, "AT+%s=", at_cmd.cmd);
+	if(at_cmd.cmd[strlen(at_cmd.cmd) - 1] == '?') {
+		sprintf(msg_buf, "AT+%s", at_cmd.cmd);
+	}
+	else
+		sprintf(msg_buf, "AT+%s=", at_cmd.cmd);
+
 	for(size_t i = 0; i < at_cmd.arg_count; i++) {
 		strcat(msg_buf, at_cmd.args[i]);
 		if (i != at_cmd.arg_count-1)

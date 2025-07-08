@@ -68,13 +68,15 @@ int _bl_erase(uint32_t page_count, uint32_t initial_page) {
 
 __attribute__ ((long_call, section(".RamFunc"))) void _bl_go(uint32_t go_addr) {
 	uint8_t bank_swp = 0;
-	uint32_t vtor_addr = go_addr;
 	// TODO: Check for valid address
 	if (go_addr >= 0x08080000) {
 		bank_swp = 1;
 		go_addr -= 0x00080000;
 	}
+	uint32_t vtor_addr = go_addr;
 	/* Begin preparing for application jump */
+	HAL_UART_DeInit(&huart1);
+	HAL_UART_DeInit(&huart2);
 	HAL_RCC_DeInit();
 	HAL_DeInit();
 	__disable_irq();
@@ -93,7 +95,7 @@ __attribute__ ((long_call, section(".RamFunc"))) void _bl_go(uint32_t go_addr) {
 		SET_BIT(FLASH->ACR, FLASH_ACR_ICEN | FLASH_ACR_DCEN);
 	}
 	SCB->VTOR = vtor_addr;
-	//__set_MSP(_estack); // Verify whether this is actually necessary
+//	__set_MSP(&_estack); // Verify whether this is actually necessary
 	__DSB();
 	__ISB();
 	__enable_irq();
@@ -109,11 +111,11 @@ __attribute__ ((long_call, section(".RamFunc"))) void _bl_go(uint32_t go_addr) {
 void _bl_boot() {
   struct App_Data* app1 = &_nvs_start;
   struct App_Data* app2 = &_nvs_start + sizeof(struct App_Data);
-  if (app1->status != BL_INVALID || app1->status != BL_ABORTED) {
+  if (app1->status != BL_INVALID && app1->status != BL_ABORTED) {
 	  bl_ota_move_status_to_ram(app1);
 	  _bl_go(app1->address);
   }
-  else if (app2->status != BL_INVALID || app2->status != BL_ABORTED) {
+  else if (app2->status != BL_INVALID && app2->status != BL_ABORTED) {
 	  bl_ota_move_status_to_ram(app2);
 	  _bl_go(app2->address);
   }
